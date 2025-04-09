@@ -1,100 +1,92 @@
 import 'dart:io';
 
 class Candidato {
-  String nome;
-  int votos;
+  //Atributos
+  int id = 0;
+  String nome = '';
+  int votos = 0;
+  double? porcentagem;
 
-  Candidato(this.nome, this.votos);
+  //Métodos
+  //Construtor
+  Candidato(this.id, this.nome, this.votos, [this.porcentagem]);
 
   @override
   String toString() {
-    return '$nome\t$votos';
+    return '|$id|$nome|$votos|$porcentagem|';
   }
 }
 
-void main() {
-  final List<Candidato> candidatos = [];
-  
-  while (true) {
-    print('1 - Adicionar candidato');
-    print('2 - Excluir candidato');
-    print('3 - Mostrar porcentagem de votos');
-    print('4 - Sair');
-    
-    final opcao = stdin.readLineSync();
-    
-    switch (opcao) {
-      case '1':
-        print('Digite o nome do candidato:');
-        final nome = stdin.readLineSync() ?? '';
-        
-        print('Digite a quantidade de votos:');
-        final votos = int.tryParse(stdin.readLineSync() ?? '') ?? 0;
-        
-        candidatos.add(Candidato(nome, votos));
-        break;
-        
-      case '2':
-        if (candidatos.isEmpty) {
-          print('Nenhum candidato cadastrado');
-          break;
+class Eleicao {
+    //Atributos
+    int id = 0;
+    String nome = '';
+    List<Candidato> candidatos = [];
+   
+   //Métodos
+    Eleicao(this.id, this.nome);
+
+    votosTotal() {
+        int total = 0;
+        for (var candidato in candidatos) {
+            total += candidato.votos;
         }
-        
-        print('Candidatos disponíveis:');
-        for (int i = 0; i < candidatos.length; i++) {
-          print('${i + 1} - ${candidatos[i].nome}');
-        }
-        
-        print('Digite o número do candidato a excluir:');
-        final index = int.tryParse(stdin.readLineSync() ?? '') ?? 0;
-        
-        if (index > 0 && index <= candidatos.length) {
-          candidatos.removeAt(index - 1);
-          print('Candidato removido com sucesso');
-        } else {
-          print('Nenhum candidato excluído');
-        }
-        break;
-        
-      case '3':
-        if (candidatos.isEmpty) {
-          print('Nenhum candidato cadastrado');
-          break;
-        }
-        
-        final totalVotos = candidatos.fold(0, (sum, c) => sum + c.votos);
-        print('Candidatos\tVotos\tPorcentagem');
-        
-        bool primeiroTurno = true;
-        for (final c in candidatos) {
-          final porcentagem = (c.votos / totalVotos * 100);
-          print('${c.nome}\t${c.votos}\t${porcentagem.toStringAsFixed(2)}%');
-          
-          if (porcentagem > 50) {
-            print('\nCandidato ${c.nome} ganhou no primeiro turno!');
-            primeiroTurno = false;
-          }
-        }
-        
-        if (primeiroTurno) {
-          print('\n5 - Segundo Turno');
-        }
-        break;
-        
-      case '4':
-        exit(0);
-        
-      case '5':
-        if (candidatos.length >= 2) {
-          print('\n--- SEGUNDO TURNO ---');
-          print('O segundo turno será implementada aqui');
-        } else {
-          print('Número insuficiente de candidatos para segundo turno');
-        }
-        break;
-        
-      default:
-        print('Opção inválida');
+        return total;
     }
-  }
+
+    calcularPorcentagem(){
+        for (var candidato in candidatos) {
+            candidato.porcentagem = (candidato.votos / votosTotal()) * 100;
+        }
+    }
+
+    addCandidato(Candidato candidato){
+        candidatos.add(candidato);
+        calcularPorcentagem();
+    }
+
+    removeCandidato(int id){
+        candidatos.removeWhere((candidato) => candidato.id == id);
+        calcularPorcentagem();
+    }
+
+    @override
+    String toString() {
+        return '{id: $id, nome: $nome, candidatos: $candidatos}';
+    }
+}
+
+void main(){
+    Eleicao eleicao = Eleicao(1, 'Representante de turma');
+    int menu = 0;
+    while (menu != 4){
+        print('1 - Adicionar candidato\n2 - Remover candidato\n3 - Mostrar resultados\n4 - Sair');
+        menu = int.parse(stdin.readLineSync()!);
+        switch (menu) {
+            case 1:
+                int id = eleicao.candidatos.isEmpty ? 1 : eleicao.candidatos[eleicao.candidatos.length - 1].id + 1;
+                print('Digite o nome do candidato: ');
+                String nome = stdin.readLineSync()!;
+                print('Digite a quantidade de votos do candidato: ');
+                int votos = int.parse(stdin.readLineSync()!);
+                Candidato candidato = Candidato(id, nome, votos);
+                eleicao.addCandidato(candidato);
+                break;
+            case 2:
+                print('Digite o id do candidato: ');
+                int id = int.parse(stdin.readLineSync()!);
+                eleicao.removeCandidato(id);
+                break;
+            case 3:
+                for (var candidato in eleicao.candidatos) {
+                    print(candidato);
+                }
+                break;
+            case 4:
+                print('Saindo...');
+                break;
+            default:
+                print('Opção inválida!');
+        }
+    }
 }
